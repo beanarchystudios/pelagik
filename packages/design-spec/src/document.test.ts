@@ -14,7 +14,7 @@ const spec = {
 it("uses the real json-render catalog for prompts, vocabulary and structural validation", () => {
   expect(designCatalog.validate(spec).success).toBe(true)
   expect(designCatalog.validate({ rootIds: [], nodes: { bad: { type: "iframe", props: {}, childIds: [] } } }).success).toBe(false)
-  expect(getDesignCatalog().components).toEqual(["frame", "group", "rectangle", "ellipse", "text", "icon"])
+  expect(getDesignCatalog().components).toEqual(["frame", "group", "rectangle", "ellipse", "text", "image", "icon"])
   expect(getDesignCatalog().prompt).toContain("parent-local")
 })
 it("compiles a spec into editable nodes with variables, flex and independent IDs", () => {
@@ -159,4 +159,14 @@ it("preserves text font families through saved specs and defaults older text nod
     rootIds: ["shape"],
     nodes: { shape: { type: "rectangle", props: { fontFamily: "Georgia" }, childIds: [] } },
   })).toThrow()
+})
+
+
+it("round-trips embedded images and rejects external image URLs", () => {
+  const image = "data:image/png;base64,aGVsbG8="
+  const spec = { rootIds: ["photo"], nodes: { photo: { type: "image", props: { image, width: 40, height: 30 }, childIds: [] } } }
+  const result = insertDesignSpec(emptyDocument(), spec)
+  const exported = documentToSpec(result.doc)
+  expect(exported.nodes[result.rootIds[0]].props).toHaveProperty("image", image)
+  expect(() => insertDesignSpec(emptyDocument(), { ...spec, nodes: { photo: { ...spec.nodes.photo, props: { ...spec.nodes.photo.props, image: "https://example.com/image.png" } } } })).toThrow()
 })

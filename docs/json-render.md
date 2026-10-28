@@ -2,8 +2,10 @@
 
 Pelagik uses `@json-render/core@0.21.3` to define a component catalog, generate an
 agent prompt, and validate design specifications. The catalog supports frames,
-groups, rectangles, ellipses, text, and icons. Every design is stored as a json-render spec. Manual creation, property edits,
+groups, rectangles, ellipses, text, icons, and embedded raster images. Every design is stored as a json-render spec. Manual creation, property edits,
 drag previews, agent edits, and undo/redo all use the same catalog validation.
+
+Images carry PNG, JPEG, GIF, or WebP data URLs in their `image` property.
 
 Icons carry their artwork in the spec as flat SVG shapes (`elements` with a `tag` and
 allowlisted `attrs`), not as markup. Their `fill` is the icon color, and they cannot have

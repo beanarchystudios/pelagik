@@ -1,7 +1,7 @@
 import { z } from "zod"
 import { SHADER_IDS } from "@pelagik/design-core/types"
 
-export const nodeType = z.enum(["frame", "rectangle", "ellipse", "text", "group", "icon"])
+export const nodeType = z.enum(["frame", "rectangle", "ellipse", "text", "group", "icon", "image"])
 export const shader = z.enum(SHADER_IDS)
 const coordinate = z.number().finite().min(-1_000_000).max(1_000_000)
 const size = z.number().finite().min(1).max(100_000)

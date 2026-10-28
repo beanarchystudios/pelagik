@@ -20,6 +20,7 @@ const LABELS: Record<NodeType, string> = {
   ellipse: "Ellipse",
   text: "Text",
   icon: "Icon",
+  image: "Image",
 }
 
 const STYLE_DEFAULTS: Record<NodeType, Pick<SceneNode, "fill" | "stroke" | "strokeWidth" | "radius" | "text" | "fontFamily" | "fontSize" | "fontWeight" | "textAlign">> = {
@@ -28,6 +29,7 @@ const STYLE_DEFAULTS: Record<NodeType, Pick<SceneNode, "fill" | "stroke" | "stro
   rectangle: { fill: "#d9d9d9", stroke: null, strokeWidth: 1, radius: 0, text: "", fontFamily: "DM Sans Variable", fontSize: 14, fontWeight: 400, textAlign: "left" },
   ellipse: { fill: "#d9d9d9", stroke: null, strokeWidth: 1, radius: 0, text: "", fontFamily: "DM Sans Variable", fontSize: 14, fontWeight: 400, textAlign: "left" },
   text: { fill: "#000000", stroke: null, strokeWidth: 1, radius: 0, text: "", fontFamily: "DM Sans Variable", fontSize: 16, fontWeight: 400, textAlign: "left" },
+  image: { fill: null, stroke: null, strokeWidth: 1, radius: 0, text: "", fontFamily: "DM Sans Variable", fontSize: 14, fontWeight: 400, textAlign: "left" },
   icon: { fill: "#000000", stroke: null, strokeWidth: 1, radius: 0, text: "", fontFamily: "DM Sans Variable", fontSize: 14, fontWeight: 400, textAlign: "left" },
 }
 
@@ -47,6 +49,7 @@ export function createNode(doc: Document, type: NodeType, box: Rect, id: string 
     locked: false,
     bindings: {},
     icon: null,
+    image: null,
     shader: null,
     ...STYLE_DEFAULTS[type],
     ...snapRectToPixels(box),

@@ -12,6 +12,7 @@ export const componentProps = {
   rectangle: z.object({ ...shape, ...lock }).strict(),
   ellipse: z.object({ ...shape, ...lock }).strict(),
   text: z.object({ ...textShape, ...lock, text: patch.shape.text, fontFamily: patch.shape.fontFamily, fontSize: patch.shape.fontSize, fontWeight: patch.shape.fontWeight, textAlign: patch.shape.textAlign }).strict(),
+  image: z.object({ ...geometry, ...lock, image: z.string().max(20_000_000).regex(/^data:image\/(png|jpeg|gif|webp);base64,[A-Za-z0-9+/]+={0,2}$/) }).strict(),
   icon: z.object({ ...geometry, ...lock, fill: color, icon: iconGlyph }).strict(),
 }
 
@@ -45,6 +46,7 @@ export const designCatalog = defineCatalog(schema, {
     rectangle: { props: componentProps.rectangle, description: "A rectangle, optionally with rounded corners and a shader effect." },
     ellipse: { props: componentProps.ellipse, description: "An ellipse or circle, optionally with a shader effect." },
     text: { props: componentProps.text, description: "Editable text. Browser font measurement determines its height." },
+    image: { props: componentProps.image, description: "An embedded raster image." },
     icon: { props: componentProps.icon, description: "A vector icon from an icon library. Its fill sets the icon color. Icons cannot have children or strokes." },
   },
 })
@@ -62,6 +64,7 @@ export const designSpecSchema = z.object({
     z.object({ type: z.literal("rectangle"), props: componentProps.rectangle, childIds: children, bindings }).strict(),
     z.object({ type: z.literal("ellipse"), props: componentProps.ellipse, childIds: children, bindings }).strict(),
     z.object({ type: z.literal("text"), props: componentProps.text, childIds: children, bindings }).strict(),
+    z.object({ type: z.literal("image"), props: componentProps.image, childIds: children, bindings }).strict(),
     z.object({ type: z.literal("icon"), props: componentProps.icon, childIds: children, bindings }).strict(),
   ])).refine(nodes => Object.keys(nodes).length <= 10000, "Designs are limited to 10000 nodes"),
   variables: z.record(key, z.object({ name: z.string().trim().min(1).max(200), value: color }).strict()).refine(vars => Object.keys(vars).length <= 1000).optional(),

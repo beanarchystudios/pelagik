@@ -1,10 +1,11 @@
 import { useLayoutEffect, useRef, useState } from "react"
-import { Circle, Frame, Hand, MousePointer2, Shapes, Sparkles, Square, Type, type LucideIcon } from "lucide-react"
+import { Circle, Frame, Hand, Image, MousePointer2, Shapes, Sparkles, Square, Type, type LucideIcon } from "lucide-react"
 import { Button } from "@pelagik/ui/components/button"
 import { Kbd } from "@pelagik/ui/components/kbd"
 import { ToggleGroup, ToggleGroupItem } from "@pelagik/ui/components/toggle-group"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@pelagik/ui/components/tooltip"
 import type { Tool } from "@pelagik/design-core/types"
+import { insertImages } from "../state/images"
 import { setTool } from "../state/commands"
 import { useEditor } from "../state/store"
 
@@ -21,6 +22,7 @@ export function Toolbar() {
   const tool = useEditor((s) => s.tool)
   const setIconPickerOpen = useEditor((s) => s.setIconPickerOpen)
   const setShaderPickerOpen = useEditor((s) => s.setShaderPickerOpen)
+  const imageInputRef = useRef<HTMLInputElement>(null)
   const groupRef = useRef<HTMLDivElement>(null)
   // Where the sliding highlight sits behind the active tool, measured from the group's top edge.
   const [highlight, setHighlight] = useState<{ top: number; height: number } | null>(null)
@@ -73,6 +75,11 @@ export function Toolbar() {
             </Tooltip>
           ))}
         </ToggleGroup>
+        <input ref={imageInputRef} type="file" accept="image/png,image/jpeg,image/gif,image/webp" multiple className="hidden" onChange={(e) => { void insertImages(Array.from(e.target.files ?? [])); e.target.value = "" }} />
+        <Tooltip>
+          <TooltipTrigger asChild><Button variant="ghost" size="icon" aria-label="Insert image" className="size-8 text-muted-foreground" onClick={() => imageInputRef.current?.click()}><Image /></Button></TooltipTrigger>
+          <TooltipContent side="right">Insert image</TooltipContent>
+        </Tooltip>
         {/* An action rather than a tool: it opens the picker and never joins the tool highlight. */}
         <Tooltip>
           <TooltipTrigger asChild>

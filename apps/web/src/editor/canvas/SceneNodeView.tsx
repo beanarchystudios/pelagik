@@ -86,6 +86,8 @@ export const SceneNodeView = memo(function SceneNodeView({ id, showLabels = true
         </div>
       )}
 
+      {node.type === "image" && node.image && <img src={node.image} alt="" draggable={false} className="absolute inset-0 size-full" />}
+
       {isIcon && node.icon && <IconGlyphView glyph={node.icon} color={node.fill ?? "#000000"} className="absolute inset-0 size-full" />}
 
       {isText && (

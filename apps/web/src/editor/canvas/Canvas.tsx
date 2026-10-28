@@ -4,6 +4,7 @@ import { boundsOfIds, createNode, topmostIds, worldCenter } from "@pelagik/desig
 import { addNodeAt, moveNodes, reparentForDrop, resizeNodes, rotateNodes } from "@pelagik/design-core/operations"
 import type { Document, Handle, NodeType, Point, Rect, SceneNode, Tool, Viewport } from "@pelagik/design-core/types"
 import { fitBounds, screenToWorld, zoomAround } from "@pelagik/design-core/viewport"
+import { insertImages } from "../state/images"
 import { beginTextEdit } from "../state/commands"
 import { useEditor } from "../state/store"
 import { CanvasContextMenu } from "./CanvasContextMenu"
@@ -25,6 +26,7 @@ const DEFAULT_SIZE: Record<NodeType, { width: number; height: number }> = {
   ellipse: { width: 100, height: 100 },
   text: { width: 200, height: 24 },
   icon: { width: 24, height: 24 },
+  image: { width: 100, height: 100 },
 }
 
 /** Screen pixels a pointer must travel before a click becomes a drag. */
@@ -372,6 +374,13 @@ export function Canvas() {
         ref={containerRef}
         className="relative h-full w-full touch-none overflow-hidden bg-canvas select-none"
         style={{ cursor, ...gridStyle }}
+        onDragOver={(e) => { if (e.dataTransfer.types.includes("Files")) { e.preventDefault(); e.dataTransfer.dropEffect = "copy" } }}
+        onDrop={(e) => {
+          if (!e.dataTransfer.types.includes("Files")) return
+          e.preventDefault()
+          const point = screenToWorld(useEditor.getState().viewport, localPoint(e.currentTarget, e))
+          void insertImages(Array.from(e.dataTransfer.files), point)
+        }}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={finishGesture}

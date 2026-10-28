@@ -1,4 +1,4 @@
-import { ChevronRight, Circle, Eye, EyeOff, Frame, Group, Lock, LockOpen, Shapes, Square, Type, type LucideIcon } from "lucide-react"
+import { ChevronRight, Circle, Eye, EyeOff, Frame, Group, Image, Lock, LockOpen, Shapes, Square, Type, type LucideIcon } from "lucide-react"
 import { useEffect, useMemo, useRef, useState, type DragEvent, type MouseEvent } from "react"
 import { ScrollArea } from "@pelagik/ui/components/scroll-area"
 import { cn } from "cn"
@@ -13,6 +13,7 @@ const ICONS: Record<NodeType, LucideIcon> = {
   ellipse: Circle,
   text: Type,
   icon: Shapes,
+  image: Image,
 }
 
 interface Row {

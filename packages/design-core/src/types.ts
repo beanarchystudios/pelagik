@@ -3,7 +3,7 @@ import type { ShaderId } from "./shader-ids"
 export { SHADER_IDS } from "./shader-ids"
 export type { ShaderId } from "./shader-ids"
 
-export type NodeType = "frame" | "group" | "rectangle" | "ellipse" | "text" | "icon"
+export type NodeType = "frame" | "group" | "rectangle" | "ellipse" | "text" | "icon" | "image"
 
 export type TextAlign = "left" | "center" | "right"
 
@@ -76,6 +76,7 @@ export interface SceneNode {
   textAlign: TextAlign
   /** Icon layers only. Their `fill` sets the icon color. */
   icon: IconGlyph | null
+  image: string | null
   /**
    * Properties linked to a design variable. A bound property always holds the variable's current
    * value, so renderers and the design panel read the property directly.

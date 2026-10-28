@@ -88,6 +88,7 @@ examples, validation, and agent workflow.
 ## What works
 
 - **Tools:** move, frame, rectangle, ellipse, text (inline editing), hand
+- **Images:** insert PNG, JPEG, GIF, or WebP files with the toolbar or drag them onto the canvas. Images are embedded in the design.
 - **Icons:** insert (`I`) from Lucide, Hugeicons, Phosphor, Tabler, Remix, or any Iconify set. Icons are editable vectors colored by fill. Searching needs an internet connection; icons already in a design keep their artwork offline.
 - **Canvas:** pan (wheel, space-drag, hand tool), zoom (ctrl/cmd + wheel, pinch, zoom menu, fit, selection, 100%)
 - **Selection:** click, shift-click, marquee, select-all, double-click to enter groups and edit text

@@ -11,8 +11,8 @@ export function documentToSpec(doc: Document, roots = doc.rootIds): DesignSpec {
   const variables: NonNullable<DesignSpec["variables"]> = Object.create(null)
   for (const id of ids) {
     const node = doc.nodes[id]
-    const { id: _id, type, parentId: _parentId, childIds, bindings, flex, text, fontFamily, fontSize, fontWeight, textAlign, fill, shader, stroke, strokeWidth, radius, icon, ...common } = node
-    const shapeProps = type === "group" ? {} : type === "icon" ? { fill, icon } : type === "text" ? { fill, stroke, strokeWidth, radius } : { fill, ...(shader ? { shader } : {}), stroke, strokeWidth, radius }
+    const { id: _id, type, parentId: _parentId, childIds, bindings, flex, text, fontFamily, fontSize, fontWeight, textAlign, fill, shader, stroke, strokeWidth, radius, icon, image, ...common } = node
+    const shapeProps = type === "group" ? {} : type === "image" ? { image } : type === "icon" ? { fill, icon } : type === "text" ? { fill, stroke, strokeWidth, radius } : { fill, ...(shader ? { shader } : {}), stroke, strokeWidth, radius }
     const props = {
       ...common,
       ...shapeProps,
@@ -77,6 +77,7 @@ function validateHierarchy(spec: DesignSpec) {
     seen.add(id); parents.set(id, parent)
     const node = spec.nodes[id]
     if (node.childIds.length && node.type !== "frame" && node.type !== "group") throw new Error("Only frames and groups can contain children")
+    if (node.type === "image" && Object.keys(node.bindings ?? {}).length) throw new Error("Images cannot bind colors")
     if (node.type === "group" && Object.keys(node.bindings ?? {}).length) throw new Error("Groups cannot bind colors")
     if (node.type === "icon" && node.bindings?.stroke) throw new Error("Icons cannot bind strokes")
     for (const variable of Object.values(node.bindings ?? {})) if (!Object.hasOwn(spec.variables ?? {}, variable!)) throw new Error("Unknown spec variable")
