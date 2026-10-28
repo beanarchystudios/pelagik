@@ -11,16 +11,17 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@pelagik/agent-api": "workspace:*",
+    "@pelagik/design-core": "workspace:*",
+    "@pelagik/design-spec": "workspace:*",
+    "@pelagik/ui": "workspace:*",
     "cn": "^0.5.0",
+    "dexie": "^4.4.7",
+    "html-to-image": "^1.11.13",
     "lucide-react": "^1.62.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
-    "zustand": "^5.0.16",
-    "@pelagik/design-core": "workspace:*",
-    "@pelagik/agent-api": "workspace:*",
-    "html-to-image": "^1.11.13",
-    "@pelagik/design-spec": "workspace:*",
-    "@pelagik/ui": "workspace:*"
+    "zustand": "^5.0.16"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.3",
@@ -28,6 +29,7 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.2",
+    "fake-indexeddb": "^6.2.6",
     "tailwindcss": "^4.3.3",
     "typescript": "~5.9.3",
     "vite": "^8.3.5",

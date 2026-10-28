@@ -98,7 +98,7 @@ examples, validation, and agent workflow.
 - **Design panel:** position, size, rotation, opacity, corner radius, fill, stroke, shader effects, text size/weight/alignment, alignment tools
 - **Shaders:** browse effects and 75 shader families in the Library, with five variants each; sources and previews are bundled for offline use, including Liquid Glass styles for iOS screens
 - **Editing:** undo/redo (coalesced per field), copy, paste, duplicate, delete, group/ungroup, bring forward/back, context menu
-- **Persistence:** the document autosaves to local storage
+- **Persistence:** designs autosave to IndexedDB on this device and can be opened from the dashboard; existing local saves are imported once
 
 ## Not yet
 

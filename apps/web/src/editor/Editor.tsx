@@ -23,7 +23,7 @@ function PanelHeader({ children }: { children: string }) {
   )
 }
 
-export function Editor() {
+export function Editor({ onBack }: { onBack: () => void }) {
   const hasSelection = useEditor((s) => s.selectedIds.length > 0)
   const selectionLabel = useEditor((s) => {
     if (s.selectedIds.length !== 1) return `${s.selectedIds.length} layers`
@@ -33,7 +33,7 @@ export function Editor() {
   return (
     <div className="grid h-dvh min-h-0 grid-cols-[240px_minmax(0,1fr)_260px] overflow-hidden bg-background text-foreground">
       <aside className="flex min-h-0 flex-col border-r bg-sidebar">
-        <LeftSidebarHeader />
+        <LeftSidebarHeader onBack={onBack} />
         <Tabs defaultValue="layers" className="flex min-h-0 flex-1 flex-col gap-0">
           <TabsList variant="line" className="h-9 w-full shrink-0 justify-start rounded-none border-b bg-sidebar px-2">
             <TabsTrigger value="layers" className="rounded-none">Layers</TabsTrigger>

@@ -1,20 +1,20 @@
 import { useEffect } from "react"
-import { Waves } from "lucide-react"
+import { ArrowLeft } from "lucide-react"
 import { Input } from "@pelagik/ui/components/input"
 import { AgentDialog } from "../agent/AgentDialog"
 import { ZoomControl } from "../canvas/ZoomControl"
 import { useEditor } from "../state/store"
 import { syncThemeWithSystem } from "../theme"
 
-export function LeftSidebarHeader() {
+export function LeftSidebarHeader({ onBack }: { onBack: () => void }) {
   const name = useEditor((s) => s.name)
   const setName = useEditor((s) => s.setName)
 
   return (
     <header className="flex h-9 shrink-0 items-center gap-1 border-b border-border/70 bg-sidebar px-2.5">
-      <div aria-hidden="true" className="flex size-6 shrink-0 items-center justify-center text-selection">
-        <Waves className="size-4" strokeWidth={2} />
-      </div>
+      <button type="button" onClick={onBack} aria-label="Back to designs" className="flex size-6 shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-ring">
+        <ArrowLeft className="size-4" />
+      </button>
       <Input
         aria-label="File name"
         value={name}
