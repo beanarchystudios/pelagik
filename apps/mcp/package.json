@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "tsc --noEmit",
+    "build:package": "bun build-package.ts",
     "typecheck": "tsc --noEmit",
     "start": "bun src/server.ts",
     "pair": "bun src/cli.ts pair",

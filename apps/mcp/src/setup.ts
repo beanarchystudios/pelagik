@@ -32,11 +32,18 @@ export async function mergeClientConfig(file: string) {
 export async function setupAgents(dryRun = false) {
   if (!dryRun) {
     await mkdir(installedDir, { recursive: true, mode: 0o700 })
-    const build = await Bun.build({
-      entrypoints: ["server", "broker", "cli"].map(name => path.join(root, `apps/mcp/src/${name}.ts`)),
-      target: "bun", outdir: installedDir, naming: "[name].js",
-    })
-    if (!build.success) throw new Error(`Cannot install agent runtime: ${build.logs.join("\n")}`)
+    if (import.meta.url.endsWith(".ts")) {
+      const build = await Bun.build({
+        entrypoints: ["server", "broker", "cli"].map(name => path.join(root, `apps/mcp/src/${name}.ts`)),
+        target: "bun", outdir: installedDir, naming: "[name].js",
+      })
+      if (!build.success) throw new Error(`Cannot install agent runtime: ${build.logs.join("\n")}`)
+    } else {
+      const sourceDir = path.dirname(fileURLToPath(import.meta.url))
+      if (sourceDir !== installedDir) {
+        await Promise.all(["server", "broker", "cli"].map(name => copyFile(path.join(sourceDir, `${name}.js`), path.join(installedDir, `${name}.js`))))
+      }
+    }
   }
   const home = homedir()
   const clients = [

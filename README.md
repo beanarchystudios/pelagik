@@ -63,10 +63,10 @@ can download its desktop runtime.
 ## Agent access
 
 The MCP server lets agents inspect and edit the open web or desktop editor and
-request PNG previews. Run `bun run agent:setup` once to detect and configure
+request PNG previews. Run `bunx pelagik setup` once to detect and configure
 installed Codex, Claude Code, and Cursor clients. Desktop connects automatically
-and reconnects after restarts. Web editors pair once with `bun run agent:pair`.
-Any agent can also use `bun run agent status` and `bun run agent call TOOL 'JSON'`
+and reconnects after restarts. Web editors pair once with `bunx pelagik pair`.
+Any agent can also use `bunx pelagik status` and `bunx pelagik call TOOL 'JSON'`
 directly, without an MCP host.
 
 See [MCP setup and tool reference](docs/mcp.md) for client configuration,

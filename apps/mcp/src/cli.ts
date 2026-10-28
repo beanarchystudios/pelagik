@@ -10,7 +10,7 @@ if (command === "setup") {
   if (!results.length) console.log("No supported clients detected. MCP configuration:\n" + JSON.stringify({ mcpServers: { pelagik: serverConfig } }, null, 2))
   if (!dry) {
     await ensureBroker()
-    console.log("Pelagik desktop will connect automatically. Restart agent clients once to load MCP tools. Any agent can also use: bun run agent call TOOL 'JSON'")
+    console.log("Pelagik desktop will connect automatically. Restart agent clients once to load MCP tools. Any agent can also use: bunx pelagik call TOOL 'JSON'")
   }
   if (results.some(r => r.startsWith("Failed"))) process.exitCode = 1
 } else if (command === "desktop-connect") {
@@ -23,11 +23,11 @@ if (command === "setup") {
   console.log(JSON.stringify(await brokerRequest(await ensureBroker(), "/status"), null, 2))
 } else if (command === "call") {
   const tool = process.argv[3]
-  if (!tool) throw new Error("Usage: bun run agent call TOOL 'JSON'")
+  if (!tool) throw new Error("Usage: bunx pelagik call TOOL 'JSON'")
   const result = await brokerRequest(await ensureBroker(), "/call", { tool, args: JSON.parse(process.argv[4] ?? "{}"), clientId: "00000000-0000-4000-8000-000000000001" })
   console.log(JSON.stringify(result, null, 2))
   if (result.error) process.exitCode = 1
 } else {
-  console.log("Usage: bun run agent setup [--dry-run] | status | call TOOL 'JSON' | pair")
+  console.log("Usage: bunx pelagik setup [--dry-run] | status | call TOOL 'JSON' | pair")
   if (command) process.exitCode = 1
 }

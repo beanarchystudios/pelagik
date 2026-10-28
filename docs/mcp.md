@@ -6,23 +6,23 @@ clients. Agents connect to an explicitly paired, open web or Electron editor.
 
 ## Connect
 
-Run once from the monorepo:
+Run once:
 
 ```sh
-bun run agent:setup
+bunx pelagik setup
 ```
 
 Setup detects Codex, Claude Code, and Cursor through executables and existing
 configuration directories. It configures installed clients at user scope,
 preserves their other settings, and backs up changed configuration files with a
-`.pelagik-backup` suffix. `bun run agent setup --dry-run` lists detections without
+`.pelagik-backup` suffix. `bunx pelagik setup --dry-run` lists detections without
 changing anything. Detection of a config directory without an available Codex CLI
 reports a failure rather than guessing at TOML edits.
 
 Setup installs a bundled runtime under
 `${XDG_STATE_HOME:-~/.local/state}/pelagik/agent/runtime`, so client configuration
 continues working if the checkout moves. Bun must remain installed. Rerun setup
-to update the installed runtime after pulling changes. Restart agent clients once
+to update the installed runtime. Restart agent clients once
 to load their new MCP configuration. Codex registration uses its supported
 [`codex mcp add` command](https://developers.openai.com/codex/mcp/).
 
@@ -32,7 +32,7 @@ session. The broker starts on demand, so no daemon installation or login service
 is needed. MCP clients rediscover the broker before each call.
 
 A web browser cannot read local setup files. For a web editor, run
-`bun run agent:pair`, open **Agents**, and paste the code once. The browser remembers
+`bunx pelagik pair`, open **Agents**, and paste the code once. The browser remembers
 its trust and reconnects afterward, including after broker restarts. Initial codes
 expire after two minutes; remembered trust has no time-based expiry.
 
@@ -50,10 +50,10 @@ Do not configure the browser bridge URL as an MCP HTTP endpoint.
 Any local agent can also call the same tools without configuring an MCP host:
 
 ```sh
-bun run agent status
-bun run agent call list_sessions '{}'
-bun run agent call get_document '{"sessionId":"<session ID>"}'
-bun run agent call apply_edits '{"sessionId":"<session ID>","expectedRevision":"<revision>","requestId":"<unique ID>","operations":[{"op":"update","ids":["<layer ID>"],"props":{"fill":"#0088cc"}}]}'
+bunx pelagik status
+bunx pelagik call list_sessions '{}'
+bunx pelagik call get_document '{"sessionId":"<session ID>"}'
+bunx pelagik call apply_edits '{"sessionId":"<session ID>","expectedRevision":"<revision>","requestId":"<unique ID>","operations":[{"op":"update","ids":["<layer ID>"],"props":{"fill":"#0088cc"}}]}'
 ```
 
 CLI calls return JSON, and tool errors produce a nonzero exit status. Direct calls

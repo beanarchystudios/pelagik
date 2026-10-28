@@ -49,3 +49,31 @@ test("installed runtime starts its broker outside the checkout without repositor
     await rm(dir, { recursive: true, force: true })
   }
 })
+
+test("npm package installs a self-contained runtime and pairs outside the checkout", async () => {
+  const dir = await mkdtemp(path.join(tmpdir(), "pelagik-package-test-"))
+  const probe = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch: () => new Response() })
+  const port = probe.port!
+  probe.stop(true)
+  let pid: number | undefined
+  try {
+    const build = Bun.spawn([process.execPath, path.resolve(import.meta.dir, "../build-package.ts")], { stdout: "pipe", stderr: "pipe" })
+    expect(await build.exited).toBe(0)
+    const bin = path.resolve(import.meta.dir, "../dist/npm/bin.js")
+    const env = { HOME: dir, PATH: dir, PELAGIK_AGENT_DIR: path.join(dir, "agent"), PELAGIK_AGENT_PORT: String(port) }
+    const run = async (command: string) => {
+      const child = Bun.spawn([process.execPath, bin, command], { cwd: dir, env, stdout: "pipe", stderr: "pipe" })
+      const [code, stdout, stderr] = await Promise.all([child.exited, new Response(child.stdout).text(), new Response(child.stderr).text()])
+      expect(stderr).toBe("")
+      expect(code).toBe(0)
+      return stdout
+    }
+    expect(await run("setup")).toContain("Pelagik desktop will connect automatically")
+    pid = JSON.parse(await readFile(path.join(dir, "agent/broker.json"), "utf8")).pid
+    expect(await readFile(path.join(dir, "agent/runtime/server.js"), "utf8")).toContain("pelagik")
+    expect(await run("pair")).toContain("paste this code once")
+  } finally {
+    if (pid) { try { process.kill(pid, "SIGTERM") } catch {} }
+    await rm(dir, { recursive: true, force: true })
+  }
+})
