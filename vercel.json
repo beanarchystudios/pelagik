@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "installCommand": "bun install --frozen-lockfile",
+  "installCommand": "bun install --frozen-lockfile --filter @pelagik/web --ignore-scripts",
   "buildCommand": "bun run --cwd apps/web build",
   "outputDirectory": "apps/web/dist"
 }
