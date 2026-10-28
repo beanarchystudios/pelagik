@@ -2,13 +2,13 @@ import { useMemo, useRef, useState } from "react"
 import { Search } from "lucide-react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@pelagik/ui/components/dialog"
 import type { ShaderId } from "@pelagik/design-core/types"
-import { updateNodesProps } from "../state/commands"
+import { insertShaderShape, updateNodesProps } from "../state/commands"
 import { useEditor } from "../state/store"
 import { PEN_SHADER_FAMILIES, SHADERS, type PenShaderFamily, type ShaderPreset } from "./catalog"
 import { ShaderPreview } from "./ShaderPreview"
 
 const CAN_USE_SHADER = new Set(["frame", "rectangle", "ellipse"])
-const BASIC_CATEGORIES = ["Image filters", "Effects"] as const
+const BASIC_CATEGORIES = ["Effects"] as const
 
 export function ShaderPicker() {
   const open = useEditor((state) => state.shaderPickerOpen)
@@ -19,12 +19,12 @@ export function ShaderPicker() {
   const [expandedFamily, setExpandedFamily] = useState<string | null>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
   const nodes = selectedIds.map((id) => doc.nodes[id]).filter(Boolean)
-  const canApply = nodes.length > 0 && nodes.every((node) => CAN_USE_SHADER.has(node.type))
+  const canApply = nodes.length === 0 || nodes.every((node) => CAN_USE_SHADER.has(node.type))
   const currentShader = nodes.length > 0 && nodes.every((node) => node.shader === nodes[0].shader) ? nodes[0].shader : null
   const query = search.trim().toLocaleLowerCase()
 
   const basicShaders = useMemo(() => SHADERS.filter((shader) => {
-    if (shader.category === "Pen shaders") return false
+    if (shader.category !== "Effects") return false
     return !query || `${shader.name} ${shader.description}`.toLocaleLowerCase().includes(query)
   }), [query])
 
@@ -38,7 +38,13 @@ export function ShaderPicker() {
   }), [query])
 
   const apply = (shader: ShaderId) => {
-    if (!canApply || nodes.every((node) => node.shader === shader)) return
+    if (!canApply) return
+    if (nodes.length === 0) {
+      insertShaderShape(shader)
+      setOpen(false)
+      return
+    }
+    if (nodes.every((node) => node.shader === shader)) return
     updateNodesProps(nodes.map((node) => node.id), { shader }, `shader:${nodes.map((node) => node.id).join(",")}`)
     setOpen(false)
   }
@@ -59,9 +65,11 @@ export function ShaderPicker() {
         <DialogHeader className="border-b px-5 py-4 pr-12">
           <DialogTitle>Shaders</DialogTitle>
           <DialogDescription>
-            {canApply
-              ? `Choose a shader for ${nodes.length === 1 ? "the selected layer" : `${nodes.length} selected layers`}.`
-              : "Select a frame, rectangle, or ellipse to apply a shader."}
+            {nodes.length === 0
+              ? "Choose a shader to add a rectangle at the center of the canvas."
+              : canApply
+                ? `Choose a shader for ${nodes.length === 1 ? "the selected layer" : `${nodes.length} selected layers`}.`
+                : "Select a frame, rectangle, or ellipse to apply a shader."}
           </DialogDescription>
         </DialogHeader>
         <div className="border-b px-5 py-3">
@@ -102,9 +110,9 @@ export function ShaderPicker() {
           })}
 
           {penFamilies.length > 0 && (
-            <section aria-label="Pen shaders" className="border-t pt-4">
+            <section aria-label="Library" className="border-t pt-4">
               <div className="mb-3 flex items-baseline justify-between gap-3">
-                <h3 className="text-xs font-medium text-muted-foreground">Pen shader library</h3>
+                <h3 className="text-xs font-medium text-muted-foreground">Library</h3>
                 <span className="text-xs text-muted-foreground">{PEN_SHADER_FAMILIES.length} families · {PEN_SHADER_FAMILIES.reduce((sum, family) => sum + family.examples.length, 0)} variants</span>
               </div>
               {penFamilies.map(({ family, familyMatches, matchingExamples }) => (

@@ -117,6 +117,17 @@ export function updateNodesProps(ids: string[], patch: Partial<SceneNode>, coale
   s.commit(updateNodes(s.doc, targets, patch), coalesceKey)
 }
 
+/** Adds a shader rectangle at the center of the view when no layer is selected. */
+export function insertShaderShape(shader: NonNullable<SceneNode["shader"]>) {
+  const s = state()
+  const center = screenToWorld(s.viewport, { x: s.canvasSize.width / 2, y: s.canvasSize.height / 2 })
+  const box = { x: center.x - 120, y: center.y - 80, width: 240, height: 160 }
+  const node: SceneNode = { ...createNode(s.doc, "rectangle", box), shader }
+  s.commit(addNodeAt(s.doc, node, box, frameAt(s.doc, center)))
+  s.setSelection([node.id])
+  s.setTool("select")
+}
+
 export function renameNode(id: string, name: string) {
   const trimmed = name.trim()
   if (!trimmed || state().doc.nodes[id]?.name === trimmed) return

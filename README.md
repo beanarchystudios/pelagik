@@ -96,7 +96,7 @@ examples, validation, and agent workflow.
 - **Flex:** frames stack children in a row or column with gap, padding, and alignment, and reflow as children change
 - **Layers panel:** tree view, rename, show/hide, lock, collapse, drag-and-drop reordering and reparenting
 - **Design panel:** position, size, rotation, opacity, corner radius, fill, stroke, shader effects, text size/weight/alignment, alignment tools
-- **Shaders:** browse image filters and effects, plus 75 Pen shader families with five variants each; shader sources and previews are bundled for offline use, including Liquid Glass styles for iOS screens
+- **Shaders:** browse effects and 75 shader families in the Library, with five variants each; sources and previews are bundled for offline use, including Liquid Glass styles for iOS screens
 - **Editing:** undo/redo (coalesced per field), copy, paste, duplicate, delete, group/ungroup, bring forward/back, context menu
 - **Persistence:** the document autosaves to local storage
 

@@ -58,18 +58,19 @@ function previewColor(uniforms: Readonly<Record<string, number | string>>): stri
 }
 
 export const PEN_SHADER_FAMILIES: PenShaderFamily[] = GENERATED_PEN_FAMILIES.map((family) => {
+  const caption = family.caption.replace(/^In use\s*\/\s*/, "")
   const examples = family.examples.map((example) => {
     const uniforms = example.uniforms as Readonly<Record<string, number | string>>
     return {
       id: `pen-${example.id}` as ShaderId,
       name: example.name,
       category: "Pen shaders" as const,
-      description: `${family.caption}${family.credit ? ` · ${family.credit}` : ""}`,
+      description: `${caption}${family.credit ? ` · ${family.credit}` : ""}`,
       previewColor: previewColor(uniforms),
       familyId: family.id,
       familyName: family.name,
       familyType: family.type,
-      variantLabel: example.label,
+      variantLabel: example.label === "In use" ? "Showcase" : example.label,
       preview: example.preview,
       source: example.source,
       uniforms,
@@ -78,7 +79,7 @@ export const PEN_SHADER_FAMILIES: PenShaderFamily[] = GENERATED_PEN_FAMILIES.map
     }
   })
   const defaultExample = examples.find((example) => example.variantLabel === "Shader only") ?? examples[0]
-  return { id: family.id, name: family.name, type: family.type, caption: family.caption, credit: family.credit, examples, defaultExample }
+  return { id: family.id, name: family.name, type: family.type, caption, credit: family.credit, examples, defaultExample }
 })
 
 const visibleLegacyShaders = LEGACY_SHADERS.filter((shader) => !LEGACY_PEN_ALIASES.has(shader.id))

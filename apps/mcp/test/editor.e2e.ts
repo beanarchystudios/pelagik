@@ -230,7 +230,7 @@ try {
     await Promise.all(buttons.map(button => button.querySelector('img')?.decode().catch(() => {})));
     return { title: document.querySelector('[role="dialog"] [data-slot="dialog-title"]')?.textContent, cards: buttons.length, renderedPreviews: buttons.filter(button => { const image = button.querySelector('img'); return image?.complete && image.naturalWidth > 0 }).length, families: document.querySelectorAll('[role="dialog"] [data-shader-family]').length, variants: document.querySelectorAll('[role="dialog"] [data-shader-variant]').length, penShaders: ['ASCII Echo', 'Aurō Bevel', 'Aurō Flow', 'Aurora', 'Liquid Glass'].map(name => buttons.some(button => button.getAttribute('aria-label') === 'Apply ' + name + ' shader')) };
   })()`)
-  assert.deepEqual(shaderLibrary, { title: "Shaders", cards: 86, renderedPreviews: 86, families: 75, variants: 0, penShaders: [true, true, true, true, true] })
+  assert.deepEqual(shaderLibrary, { title: "Shaders", cards: 79, renderedPreviews: 79, families: 75, variants: 0, penShaders: [true, true, true, true, true] })
   await evaluate(`document.querySelector('button[aria-label="Show ASCII Echo variants"]').click(); true`)
   const asciiVariants = await evaluate(`document.querySelectorAll('[data-shader-family="ascii-echo"] [data-shader-variant]').length`)
   assert.equal(asciiVariants, 5, "Each Pen shader family should expose all five variants")

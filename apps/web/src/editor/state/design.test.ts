@@ -89,3 +89,17 @@ it("inserts an icon at the view center as one selected, undoable step", async ()
   useEditor.getState().undo()
   expect(useEditor.getState().doc.rootIds).toEqual([])
 })
+
+it("inserts a shader rectangle at the view center when nothing is selected", async () => {
+  const { insertShaderShape } = await import("./commands")
+  useEditor.setState({ canvasSize: { width: 800, height: 600 }, viewport: { x: 0, y: 0, zoom: 1 } })
+  insertShaderShape("water")
+  const { doc, selectedIds, past } = useEditor.getState()
+  const node = doc.nodes[selectedIds[0]]
+  expect(node.type).toBe("rectangle")
+  expect(node.shader).toBe("water")
+  expect([node.x, node.y, node.width, node.height]).toEqual([280, 220, 240, 160])
+  expect(past).toHaveLength(1)
+  useEditor.getState().undo()
+  expect(useEditor.getState().doc.rootIds).toEqual([])
+})
