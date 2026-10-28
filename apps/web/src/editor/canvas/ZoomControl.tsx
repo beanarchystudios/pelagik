@@ -1,5 +1,5 @@
-import { Minus, Plus } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { ChevronDown } from "lucide-react"
+import { Button } from "@pelagik/ui/components/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -7,7 +7,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuShortcut,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@pelagik/ui/components/dropdown-menu"
 import { MOD_KEY, SHIFT_KEY } from "../platform"
 import { zoomBy, zoomTo, zoomToFit, zoomToSelection } from "../state/commands"
 import { useEditor } from "../state/store"
@@ -18,17 +18,15 @@ export function ZoomControl() {
   const zoom = useEditor((s) => s.viewport.zoom)
 
   return (
-    <div className="absolute bottom-3 left-3 z-10 flex items-center gap-0.5 rounded-md border bg-background p-0.5 shadow-sm">
-      <Button variant="ghost" size="icon-sm" aria-label="Zoom out" onClick={() => zoomBy(1 / ZOOM_STEP)}>
-        <Minus />
-      </Button>
+    <div role="group" aria-label="Canvas zoom">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="sm" className="w-16 tabular-nums" aria-label="Zoom level">
+          <Button variant="ghost" size="sm" className="h-7 gap-1 rounded-md px-2 text-xs tabular-nums text-muted-foreground hover:text-foreground" aria-label="Zoom level">
             {Math.round(zoom * 100)}%
+            <ChevronDown aria-hidden="true" className="size-3 opacity-60" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-64">
+        <DropdownMenuContent align="end" className="w-64 bg-sidebar">
           <DropdownMenuItem onSelect={() => zoomBy(ZOOM_STEP)}>
             Zoom in
             <DropdownMenuShortcut>{MOD_KEY} +</DropdownMenuShortcut>
@@ -55,9 +53,6 @@ export function ZoomControl() {
           <DropdownMenuItem onSelect={() => zoomTo(2)}>Zoom to 200%</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-      <Button variant="ghost" size="icon-sm" aria-label="Zoom in" onClick={() => zoomBy(ZOOM_STEP)}>
-        <Plus />
-      </Button>
     </div>
   )
 }

@@ -1,0 +1,53 @@
+{
+  "name": "@pelagik/desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "pelagik desktop design editor",
+  "author": "pelagik contributors",
+  "main": "dist/main.js",
+  "scripts": {
+    "dev": "bun run build:main && node scripts/dev.mjs",
+    "build:main": "tsc -p tsconfig.json",
+    "build": "bun run build:main && node scripts/copy-renderer.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "start": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "electron": "^45.1.0",
+    "electron-builder": "^26.18.0",
+    "typescript": "~5.9.3",
+    "@pelagik/web": "workspace:*"
+  },
+  "build": {
+    "appId": "app.pelagik.desktop",
+    "productName": "pelagik",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "package.json"
+    ],
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "category": "Graphics"
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "category": "public.app-category.graphics-design"
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    },
+    "executableName": "pelagik"
+  }
+}

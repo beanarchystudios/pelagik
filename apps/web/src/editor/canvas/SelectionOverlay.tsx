@@ -1,11 +1,12 @@
 import type { CSSProperties } from "react"
-import { boundsOfIds, topmostIds, worldMatrix } from "../model/document"
-import { apply, rotationOf } from "../model/matrix"
-import type { Document, Handle, Viewport } from "../model/types"
-import { worldToScreen } from "../model/viewport"
-import { useEditor } from "../state/store"
+import { boundsOfIds, topmostIds, worldMatrix } from "@pelagik/design-core/document"
+import { apply, rotationOf } from "@pelagik/design-core/matrix"
+import type { Document, Handle, Viewport } from "@pelagik/design-core/types"
+import { worldToScreen } from "@pelagik/design-core/viewport"
+import { activeAgentEdit, useEditor } from "../state/store"
 
-const ACCENT = "#0d99ff"
+/** Theme token, so selection matches the rest of the chrome in both themes. */
+const ACCENT = "var(--selection)"
 
 interface ScreenBox {
   left: number
@@ -61,6 +62,7 @@ export function SelectionOverlay() {
   const editingId = useEditor((s) => s.editingId)
   const marquee = useEditor((s) => s.marquee)
   const tool = useEditor((s) => s.tool)
+  const agentEdit = useEditor(activeAgentEdit)
 
   const targets = topmostIds(doc, selectedIds)
   const selection = editingId || targets.length === 0 ? null : boxFor(doc, targets, viewport)
@@ -89,10 +91,28 @@ export function SelectionOverlay() {
             width: Math.abs(marqueeEnd.x - marqueeStart.x),
             height: Math.abs(marqueeEnd.y - marqueeStart.y),
             borderColor: ACCENT,
-            backgroundColor: "rgb(13 153 255 / 0.08)",
+            backgroundColor: "color-mix(in oklab, var(--selection) 10%, transparent)",
           }}
         />
       )}
+      {agentEdit?.ids.map((id) => {
+        const box = boxFor(doc, [id], viewport)
+        if (!box) return null
+        // Keyed by edit, so every new agent edit replays the glow from the start.
+        return (
+          <div
+            key={`${agentEdit.id}:${id}`}
+            className="absolute animate-agent-flash border"
+            style={{
+              ...boxStyle(box),
+              borderColor: ACCENT,
+              borderWidth: 1.5,
+              backgroundColor: "color-mix(in oklab, var(--selection) 14%, transparent)",
+              boxShadow: "0 0 18px color-mix(in oklab, var(--selection) 55%, transparent)",
+            }}
+          />
+        )
+      })}
       {selection && <SelectionBox box={selection} rotatable={targets.length === 1} />}
     </div>
   )

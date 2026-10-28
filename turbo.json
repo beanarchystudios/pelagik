@@ -28,6 +28,36 @@
       "dependsOn": [
         "^build"
       ]
+    },
+    "@pelagik/design-core#build": {
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": []
+    },
+    "@pelagik/agent-api#build": {
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": []
+    },
+    "@pelagik/mcp#build": {
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": []
+    },
+    "@pelagik/design-spec#build": {
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": []
+    },
+    "@pelagik/ui#build": {
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": []
     }
   }
 }

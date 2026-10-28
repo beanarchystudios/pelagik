@@ -1,7 +1,7 @@
 import { useEffect } from "react"
 import { useEditor } from "../state/store"
 import * as cmd from "../state/commands"
-import type { StackOrder, Tool } from "../model/types"
+import type { StackOrder, Tool } from "@pelagik/design-core/types"
 
 const TOOL_KEYS: Record<string, Tool> = {
   v: "select",
@@ -67,6 +67,10 @@ export function useKeyboardShortcuts() {
       const key = e.key.toLowerCase()
       if (!e.shiftKey && TOOL_KEYS[key]) {
         s.setTool(TOOL_KEYS[key])
+        return
+      }
+      if (!e.shiftKey && key === "i") {
+        s.setIconPickerOpen(true)
         return
       }
 

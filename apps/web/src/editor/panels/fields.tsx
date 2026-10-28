@@ -1,11 +1,11 @@
 import { Grid2X2, Minus, Plus } from "lucide-react"
-import { useEffect, useState, type ReactNode } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useEffect, useRef, useState, type FocusEvent, type MouseEvent, type ReactNode } from "react"
+import { Button } from "@pelagik/ui/components/button"
+import { Input } from "@pelagik/ui/components/input"
+import { Label } from "@pelagik/ui/components/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@pelagik/ui/components/select"
 import { evaluateExpression } from "@/lib/expression"
-import type { DesignVariable } from "../model/types"
+import type { DesignVariable } from "@pelagik/design-core/types"
 
 export function Section({ title, action, children }: { title: string; action?: ReactNode; children?: ReactNode }) {
   return (
@@ -35,6 +35,28 @@ export function RemoveButton({ label, onClick }: { label: string; onClick: () =>
   )
 }
 
+/**
+ * Figma-style focus for property inputs: focusing selects the whole value, so typing replaces it.
+ * Chrome collapses that selection on the mouseup that finishes the click, so the first mouseup after
+ * a focusing click is cancelled. Later drags inside the field select text as usual.
+ */
+function useSelectAllOnFocus() {
+  const focusingClick = useRef(false)
+  return {
+    onMouseDown(event: MouseEvent<HTMLInputElement>) {
+      focusingClick.current = document.activeElement !== event.currentTarget
+    },
+    onFocus(event: FocusEvent<HTMLInputElement>) {
+      event.currentTarget.select()
+    },
+    onMouseUp(event: MouseEvent<HTMLInputElement>) {
+      if (!focusingClick.current) return
+      focusingClick.current = false
+      event.preventDefault()
+    },
+  }
+}
+
 function formatNumber(value: number): string {
   return String(Math.round(value))
 }
@@ -58,6 +80,7 @@ interface NumberFieldProps {
 export function NumberField({ label, labelWidth = "w-12", value, suffix, min, max, disabled, onCommit }: NumberFieldProps) {
   const [draft, setDraft] = useState(formatNumber(value))
   const [focused, setFocused] = useState(false)
+  const selectAll = useSelectAllOnFocus()
 
   useEffect(() => {
     if (!focused) setDraft(formatNumber(value))
@@ -85,7 +108,12 @@ export function NumberField({ label, labelWidth = "w-12", value, suffix, min, ma
           value={draft}
           disabled={disabled}
           className="h-7 px-2 text-xs tabular-nums"
-          onFocus={() => setFocused(true)}
+          onMouseDown={selectAll.onMouseDown}
+          onMouseUp={selectAll.onMouseUp}
+          onFocus={(e) => {
+            setFocused(true)
+            selectAll.onFocus(e)
+          }}
           onChange={(e) => setDraft(e.target.value)}
           onBlur={() => {
             setFocused(false)
@@ -131,6 +159,7 @@ export function ColorField({
   trailingAction?: ReactNode
 }) {
   const [draft, setDraft] = useState(normalizeHex(value)?.slice(1).toUpperCase() ?? value)
+  const selectAll = useSelectAllOnFocus()
   useEffect(() => setDraft(normalizeHex(value)?.slice(1).toUpperCase() ?? value), [value])
 
   const swatch = normalizeHex(value) ?? "#000000"
@@ -150,7 +179,11 @@ export function ColorField({
       <Input
         aria-label={`${field} hex`}
         value={draft}
-        className="h-full min-w-0 flex-1 rounded-none border-0 bg-transparent px-0 py-0 font-mono text-xs uppercase shadow-none focus-visible:border-0 focus-visible:ring-0 dark:bg-transparent"
+        className="h-full min-w-0 flex-1 rounded-none border-0 bg-transparent px-0 py-0 text-xs uppercase shadow-none focus-visible:border-0 focus-visible:ring-0 dark:bg-transparent"
+        style={{ fontFamily: '"JetBrains Mono", ui-monospace, monospace' }}
+        onMouseDown={selectAll.onMouseDown}
+        onMouseUp={selectAll.onMouseUp}
+        onFocus={selectAll.onFocus}
         onChange={(e) => setDraft(e.target.value)}
         onBlur={() => {
           const hex = normalizeHex(draft)

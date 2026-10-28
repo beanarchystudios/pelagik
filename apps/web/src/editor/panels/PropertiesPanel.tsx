@@ -10,12 +10,12 @@ import {
   AlignStartVertical,
   type LucideIcon,
 } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
-import { DEFAULT_FLEX } from "../model/flex"
+import { Button } from "@pelagik/ui/components/button"
+import { Label } from "@pelagik/ui/components/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@pelagik/ui/components/select"
+import { ToggleGroup, ToggleGroupItem } from "@pelagik/ui/components/toggle-group"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@pelagik/ui/components/tooltip"
+import { DEFAULT_FLEX } from "@pelagik/design-core/flex"
 import type {
   AlignMode,
   FlexCrossAlign,
@@ -24,9 +24,12 @@ import type {
   DesignVariable,
   SceneNode,
   TextAlign,
-} from "../model/types"
+} from "@pelagik/design-core/types"
+import { iconLibraryName, splitIconName } from "../icons/iconify"
 import { alignSelection, bindSelection, updateNodesProps } from "../state/commands"
 import { useEditor } from "../state/store"
+import { FontFamilyField } from "./FontFamilyField"
+import { shaderName } from "../shaders/catalog"
 import { AddButton, ColorField, NumberField, RemoveButton, Section, VariableSelect } from "./fields"
 
 const DEFAULT_STROKE = "#000000"
@@ -84,6 +87,11 @@ function Inspector({ nodes }: { nodes: SceneNode[] }) {
   const hasFill = nodes.some((node) => node.type !== "group")
   const hasRadius = nodes.some((node) => node.type === "rectangle" || node.type === "frame")
   const hasText = nodes.some((node) => node.type === "text")
+  // Icons draw in their fill color only. A stroke would be dropped by the design spec, so the control is hidden.
+  const hasStroke = nodes.every((node) => node.type !== "icon")
+  const canRemoveFill = primary.type !== "icon"
+  const canHaveShader = nodes.every((node) => ["frame", "rectangle", "ellipse"].includes(node.type))
+  const setShaderPickerOpen = useEditor((s) => s.setShaderPickerOpen)
   const colors = variablesOfType(variables, "color")
 
   const patch = (values: Partial<SceneNode>, field: string) => updateNodesProps(ids, values, `${field}:${ids.join(",")}`)
@@ -135,15 +143,23 @@ function Inspector({ nodes }: { nodes: SceneNode[] }) {
         </div>
       </Section>
 
+      {single?.type === "icon" && single.icon && (
+        <Section title="Icon">
+          <p className="text-xs text-muted-foreground">
+            {iconLibraryName(splitIconName(single.icon.name).prefix)} · {splitIconName(single.icon.name).icon}
+          </p>
+        </Section>
+      )}
+
       {hasFill && (
         <Section
           title="Fill"
           action={
             primary.fill === null ? (
               <AddButton label="Add fill" onClick={() => patch({ fill: "#d9d9d9" }, "fill-add")} />
-            ) : (
+            ) : canRemoveFill ? (
               <RemoveButton label="Remove fill" onClick={() => patch({ fill: null }, "fill-remove")} />
-            )
+            ) : null
           }
         >
           {primary.fill !== null && (
@@ -167,40 +183,63 @@ function Inspector({ nodes }: { nodes: SceneNode[] }) {
         </Section>
       )}
 
-      <Section
-        title="Stroke"
-        action={
-          primary.stroke === null ? (
-            <AddButton label="Add stroke" onClick={() => patch({ stroke: DEFAULT_STROKE, strokeWidth: 1 }, "stroke-add")} />
+      {canHaveShader && (
+        <Section
+          title="Shader"
+          action={(
+            <Button variant="outline" size="xs" onClick={() => setShaderPickerOpen(true)}>
+              Browse
+            </Button>
+          )}
+        >
+          {single?.shader ? (
+            <div className="flex items-center justify-between rounded-md border bg-muted/30 px-2 py-1">
+              <span className="truncate text-xs text-muted-foreground">{shaderName(single.shader)}</span>
+              <RemoveButton label="Remove shader" onClick={() => patch({ shader: null }, "shader-remove")} />
+            </div>
           ) : (
-            <RemoveButton label="Remove stroke" onClick={() => patch({ stroke: null }, "stroke-remove")} />
-          )
-        }
-      >
-        {primary.stroke !== null && (
-          <div className="flex flex-col gap-2">
-            <ColorField
-              value={primary.stroke}
-              onChange={(v, key) => patch({ stroke: v }, key)}
-              field="stroke"
-              trailingAction={
-                <VariableSelect
-                  variables={colors}
-                  value={primary.bindings.stroke}
-                  onChange={(id) => bindSelection("stroke", id)}
-                  label="Stroke variable"
-                  compact
-                />
-              }
-            />
-            <NumberField label="Weight" value={primary.strokeWidth} min={0} onCommit={(v) => patch({ strokeWidth: v }, "strokeWidth")} />
-          </div>
-        )}
-      </Section>
+            <p className="text-xs text-muted-foreground">Add a visual shader to this layer.</p>
+          )}
+        </Section>
+      )}
+
+      {hasStroke && (
+        <Section
+          title="Stroke"
+          action={
+            primary.stroke === null ? (
+              <AddButton label="Add stroke" onClick={() => patch({ stroke: DEFAULT_STROKE, strokeWidth: 1 }, "stroke-add")} />
+            ) : (
+              <RemoveButton label="Remove stroke" onClick={() => patch({ stroke: null }, "stroke-remove")} />
+            )
+          }
+        >
+          {primary.stroke !== null && (
+            <div className="flex flex-col gap-2">
+              <ColorField
+                value={primary.stroke}
+                onChange={(v, key) => patch({ stroke: v }, key)}
+                field="stroke"
+                trailingAction={
+                  <VariableSelect
+                    variables={colors}
+                    value={primary.bindings.stroke}
+                    onChange={(id) => bindSelection("stroke", id)}
+                    label="Stroke variable"
+                    compact
+                  />
+                }
+              />
+              <NumberField label="Weight" value={primary.strokeWidth} min={0} onCommit={(v) => patch({ strokeWidth: v }, "strokeWidth")} />
+            </div>
+          )}
+        </Section>
+      )}
 
       {hasText && single?.type === "text" && (
         <Section title="Text">
           <div className="flex flex-col gap-2">
+            <FontFamilyField value={single.fontFamily} onChange={(value) => patch({ fontFamily: value }, "fontFamily")} />
             <NumberField label="Size" value={single.fontSize} min={1} onCommit={(v) => patch({ fontSize: v }, "fontSize")} />
             <div className="flex items-center gap-2">
               <Label className="w-12 shrink-0 text-xs text-muted-foreground">Weight</Label>

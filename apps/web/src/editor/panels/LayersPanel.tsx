@@ -1,11 +1,10 @@
-import { ChevronDown, ChevronRight, Circle, Eye, EyeOff, Frame, Group, Lock, LockOpen, Square, Type, type LucideIcon } from "lucide-react"
-import { useMemo, useRef, useState, type DragEvent, type MouseEvent } from "react"
-import { Input } from "@/components/ui/input"
-import { ScrollArea } from "@/components/ui/scroll-area"
+import { ChevronRight, Circle, Eye, EyeOff, Frame, Group, Lock, LockOpen, Shapes, Square, Type, type LucideIcon } from "lucide-react"
+import { useEffect, useMemo, useRef, useState, type DragEvent, type MouseEvent } from "react"
+import { ScrollArea } from "@pelagik/ui/components/scroll-area"
 import { cn } from "cn"
-import type { NodeType } from "../model/types"
+import type { NodeType } from "@pelagik/design-core/types"
 import { dropLayers, renameNode, toggleHidden, toggleLocked, type DropZone } from "../state/commands"
-import { useEditor } from "../state/store"
+import { activeAgentEdit, useEditor } from "../state/store"
 
 const ICONS: Record<NodeType, LucideIcon> = {
   frame: Frame,
@@ -13,6 +12,7 @@ const ICONS: Record<NodeType, LucideIcon> = {
   rectangle: Square,
   ellipse: Circle,
   text: Type,
+  icon: Shapes,
 }
 
 interface Row {
@@ -111,6 +111,23 @@ function LayerRow({ id, depth, selected, collapsed, dropZone, onToggleCollapsed,
   const toggleSelection = useEditor((s) => s.toggleSelection)
   const [renaming, setRenaming] = useState(false)
   const cancelRename = useRef(false)
+  const nameRef = useRef<HTMLSpanElement>(null)
+  // Non-zero while an agent edit touched this row. Keying the flash by it replays the animation per edit.
+  const flashId = useEditor((s) => {
+    const edit = activeAgentEdit(s)
+    return edit?.ids.includes(id) ? edit.id : 0
+  })
+
+  useEffect(() => {
+    if (!renaming || !nameRef.current) return
+    const label = nameRef.current
+    label.focus()
+    const range = document.createRange()
+    range.selectNodeContents(label)
+    const selection = window.getSelection()
+    selection?.removeAllRanges()
+    selection?.addRange(range)
+  }, [renaming])
 
   if (!node) return null
 
@@ -165,52 +182,66 @@ function LayerRow({ id, depth, selected, collapsed, dropZone, onToggleCollapsed,
       {dropZone === "above" && <div className="absolute inset-x-0 top-0 h-0.5 bg-primary" />}
       {dropZone === "below" && <div className="absolute inset-x-0 bottom-0 h-0.5 bg-primary" />}
       {dropZone === "inside" && <div className="absolute inset-0 ring-1 ring-primary" />}
+      {flashId !== 0 && <span key={flashId} aria-hidden="true" className="pointer-events-none absolute inset-0 animate-agent-flash" style={{ backgroundColor: "color-mix(in oklab, var(--selection) 25%, transparent)" }} />}
 
       <button
         type="button"
         aria-label={collapsed ? "Expand" : "Collapse"}
-        className={cn("flex size-4 shrink-0 items-center justify-center", !isContainer || node.childIds.length === 0 ? "invisible" : "hover:bg-background")}
+        className={cn(
+          "flex size-4 shrink-0 items-center justify-center text-muted-foreground transition-colors active:scale-90 hover:text-foreground",
+          (!isContainer || node.childIds.length === 0) && "invisible",
+        )}
         onClick={(e) => {
           e.stopPropagation()
           onToggleCollapsed(id)
         }}
       >
-        {collapsed ? <ChevronRight className="size-3" /> : <ChevronDown className="size-3" />}
+        <ChevronRight className={cn("size-3 transition-transform duration-150", !collapsed && "rotate-90")} />
       </button>
 
       <Icon className="size-3.5 shrink-0 text-muted-foreground" />
 
-      {renaming ? (
-        <Input
-          autoFocus
-          defaultValue={node.name}
-          aria-label="Layer name"
-          className="h-5 min-w-0 flex-1 px-1 text-xs"
-          onFocus={(e) => e.currentTarget.select()}
-          onClick={(e) => e.stopPropagation()}
-          onDoubleClick={(e) => e.stopPropagation()}
-          onKeyDown={(e) => {
-            if (e.key === "Escape") {
-              cancelRename.current = true
-              e.currentTarget.blur()
-            } else if (e.key === "Enter") {
-              e.currentTarget.blur()
-            }
-          }}
-          onBlur={(e) => {
-            if (!cancelRename.current) renameNode(id, e.currentTarget.value)
-            cancelRename.current = false
-            setRenaming(false)
-          }}
-        />
-      ) : (
-        <span className="min-w-0 flex-1 truncate">{node.name}</span>
-      )}
+      <span
+        ref={nameRef}
+        contentEditable={renaming ? "plaintext-only" : false}
+        suppressContentEditableWarning
+        aria-label={renaming ? "Layer name" : undefined}
+        role={renaming ? "textbox" : undefined}
+        className="min-w-0 flex-1 truncate outline-none"
+        onClick={(e) => {
+          if (renaming) e.stopPropagation()
+        }}
+        onDoubleClick={(e) => {
+          if (renaming) e.stopPropagation()
+        }}
+        onKeyDown={(e) => {
+          if (!renaming) return
+          e.stopPropagation()
+          if (e.nativeEvent.isComposing) return
+          if (e.key === "Escape") {
+            e.preventDefault()
+            cancelRename.current = true
+            e.currentTarget.blur()
+          } else if (e.key === "Enter") {
+            e.preventDefault()
+            e.currentTarget.blur()
+          }
+        }}
+        onBlur={(e) => {
+          if (!renaming) return
+          if (!cancelRename.current) renameNode(id, e.currentTarget.textContent ?? "")
+          e.currentTarget.textContent = useEditor.getState().doc.nodes[id]?.name ?? node.name
+          cancelRename.current = false
+          setRenaming(false)
+        }}
+      >
+        {node.name}
+      </span>
 
       <button
         type="button"
         aria-label={node.hidden ? "Show layer" : "Hide layer"}
-        className={cn("flex size-5 shrink-0 items-center justify-center hover:bg-background", !node.hidden && "invisible group-hover:visible")}
+        className={cn("flex size-5 shrink-0 items-center justify-center transition-transform hover:bg-background active:scale-90", !node.hidden && "invisible group-hover:visible")}
         onClick={(e) => {
           e.stopPropagation()
           toggleHidden(id)
@@ -221,7 +252,7 @@ function LayerRow({ id, depth, selected, collapsed, dropZone, onToggleCollapsed,
       <button
         type="button"
         aria-label={node.locked ? "Unlock layer" : "Lock layer"}
-        className={cn("flex size-5 shrink-0 items-center justify-center hover:bg-background", !node.locked && "invisible group-hover:visible")}
+        className={cn("flex size-5 shrink-0 items-center justify-center transition-transform hover:bg-background active:scale-90", !node.locked && "invisible group-hover:visible")}
         onClick={(e) => {
           e.stopPropagation()
           toggleLocked(id)

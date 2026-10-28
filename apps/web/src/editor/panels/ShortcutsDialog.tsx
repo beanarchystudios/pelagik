@@ -1,6 +1,6 @@
 import type { ReactNode } from "react"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Kbd, KbdGroup } from "@/components/ui/kbd"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@pelagik/ui/components/dialog"
+import { Kbd, KbdGroup } from "@pelagik/ui/components/kbd"
 import { MOD_KEY, SHIFT_KEY } from "../platform"
 import { useEditor } from "../state/store"
 
@@ -13,6 +13,7 @@ const SECTIONS: { title: string; rows: { label: string; keys: string[] }[] }[] =
       { label: "Rectangle", keys: ["R"] },
       { label: "Ellipse", keys: ["O"] },
       { label: "Text", keys: ["T"] },
+      { label: "Insert icon", keys: ["I"] },
       { label: "Hand (pan)", keys: ["H"] },
       { label: "Pan while held", keys: ["Space", "drag"] },
     ],

@@ -1,4 +1,5 @@
 import {
+  addNodeAt,
   alignNodes,
   copyNodes,
   deleteNodes,
@@ -11,22 +12,25 @@ import {
   reparentNodes,
   ungroupNodes,
   updateNodes,
-} from "../model/operations"
-import { boundsOfIds, childIdsOf, createId, patchNode } from "../model/document"
-import { fitBounds, zoomAround } from "../model/viewport"
+} from "@pelagik/design-core/operations"
+import { boundsOfIds, childIdsOf, createId, createNode, patchNode } from "@pelagik/design-core/document"
+import { frameAt } from "@pelagik/design-core/hit-test"
+import { fitBounds, screenToWorld, zoomAround } from "@pelagik/design-core/viewport"
 import {
   addVariable,
   bindNodes,
   deleteVariable,
   renameVariable,
   setVariableValue,
-} from "../model/variables"
-import type { AlignMode, BindableProperty, DesignVariable, Fragment, SceneNode, StackOrder, Tool } from "../model/types"
+} from "@pelagik/design-core/variables"
+import type { AlignMode, BindableProperty, DesignVariable, Fragment, IconGlyph, SceneNode, StackOrder, Tool } from "@pelagik/design-core/types"
 import { useEditor } from "./store"
 
 const state = () => useEditor.getState()
 
 const PASTE_OFFSET = 10
+/** Icons insert at this size on their longer side, the usual default for icon libraries. */
+const ICON_SIZE = 24
 
 function shiftFragment(fragment: Fragment, dx: number, dy: number): Fragment {
   const nodes = { ...fragment.nodes }
@@ -261,4 +265,22 @@ export function bindSelection(prop: BindableProperty, variableId: string | null)
   const s = state()
   if (s.selectedIds.length === 0) return
   s.commit(bindNodes(s.doc, s.selectedIds, prop, variableId))
+}
+
+/** Adds an icon at the center of the view, inside the frame under that point, and selects it. */
+export function insertIcon(glyph: IconGlyph) {
+  const s = state()
+  const center = screenToWorld(s.viewport, { x: s.canvasSize.width / 2, y: s.canvasSize.height / 2 })
+  const size = iconSize(glyph.viewBox)
+  const box = { x: center.x - size.width / 2, y: center.y - size.height / 2, ...size }
+  const node: SceneNode = { ...createNode(s.doc, "icon", box), name: glyph.name.split(":")[1] ?? glyph.name, icon: glyph }
+  s.commit(addNodeAt(s.doc, node, box, frameAt(s.doc, center)))
+  s.setSelection([node.id])
+  s.setTool("select")
+}
+
+function iconSize(viewBox: string): { width: number; height: number } {
+  const [, , width, height] = viewBox.split(" ").map(Number)
+  const scale = ICON_SIZE / Math.max(width, height)
+  return { width: Math.max(1, Math.round(width * scale)), height: Math.max(1, Math.round(height * scale)) }
 }

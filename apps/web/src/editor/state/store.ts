@@ -1,6 +1,8 @@
+import { canonicalDesign, documentToSpec, specToDocument } from "@pelagik/design-spec/document"
+import type { DesignSpec } from "@pelagik/design-spec/catalog"
 import { create } from "zustand"
-import { emptyDocument } from "../model/document"
-import type { Document, Fragment, Rect, Tool, Viewport } from "../model/types"
+import { emptyDocument } from "@pelagik/design-core/document"
+import type { Document, Fragment, Rect, Tool, Viewport } from "@pelagik/design-core/types"
 import { loadSavedFile } from "./persistence"
 
 const HISTORY_LIMIT = 200
@@ -8,10 +10,12 @@ const HISTORY_LIMIT = 200
 const COALESCE_MS = 1000
 
 export interface EditorState {
+  /** Derived canvas projection. All writes pass through the json-render catalog. */
   doc: Document
+  spec: DesignSpec
   name: string
-  past: Document[]
-  future: Document[]
+  past: DesignSpec[]
+  future: DesignSpec[]
   selectedIds: string[]
   hoveredId: string | null
   tool: Tool
@@ -26,7 +30,19 @@ export interface EditorState {
   marquee: Rect | null
   clipboard: Fragment | null
   helpOpen: boolean
+  iconPickerOpen: boolean
+  shaderPickerOpen: boolean
   lastEdit: { key: string; at: number } | null
+  /** Latest agent edit. Lives outside the document, so it never enters history or saves. See `activeAgentEdit`. */
+  agentEdit: AgentEdit | null
+}
+
+export interface AgentEdit {
+  /** Increments per agent edit. Used as a key so the glow replays for each new edit. */
+  id: number
+  ids: string[]
+  /** The `past` array right after the edit. Any later commit or undo replaces `past`, which retires this edit. */
+  past: DesignSpec[]
 }
 
 export interface EditorActions {
@@ -49,12 +65,22 @@ export interface EditorActions {
   setMarquee: (rect: Rect | null) => void
   setClipboard: (fragment: Fragment | null) => void
   setHelpOpen: (open: boolean) => void
+  setIconPickerOpen: (open: boolean) => void
+  setShaderPickerOpen: (open: boolean) => void
   startEditing: (id: string, start: Document) => void
   stopEditing: () => void
+  /** Call right after an agent commit. Only the activity UI reads this; history is unchanged. */
+  markAgentEdit: (ids: string[]) => void
+  dismissAgentEdit: () => void
 }
 
-function pushHistory(past: Document[], doc: Document): Document[] {
-  return [...past, doc].slice(-HISTORY_LIMIT)
+/** The agent edit that is still the latest history step, or null once the user has edited or undone past it. */
+export function activeAgentEdit(state: Pick<EditorState, "agentEdit" | "past">): AgentEdit | null {
+  return state.agentEdit && state.agentEdit.past === state.past ? state.agentEdit : null
+}
+
+function pushHistory(past: DesignSpec[], doc: Document): DesignSpec[] {
+  return [...past, documentToSpec(doc)].slice(-HISTORY_LIMIT)
 }
 
 /** Keeps only ids that still exist. Returns the same array when nothing was removed, to avoid re-renders. */
@@ -63,9 +89,10 @@ function keepExisting(doc: Document, ids: string[]): string[] {
 }
 
 const saved = loadSavedFile()
+const initialDesign = canonicalDesign(saved?.doc ?? emptyDocument())
 
 export const useEditor = create<EditorState & EditorActions>()((set, get) => ({
-  doc: saved?.doc ?? emptyDocument(),
+  ...initialDesign,
   name: saved?.name ?? "Untitled",
   past: [],
   future: [],
@@ -80,7 +107,10 @@ export const useEditor = create<EditorState & EditorActions>()((set, get) => ({
   marquee: null,
   clipboard: null,
   helpOpen: false,
+  iconPickerOpen: false,
+  shaderPickerOpen: false,
   lastEdit: null,
+  agentEdit: null,
 
   commit(next, coalesceKey) {
     const { doc, past, lastEdit, selectedIds } = get()
@@ -88,7 +118,7 @@ export const useEditor = create<EditorState & EditorActions>()((set, get) => ({
     const now = Date.now()
     const coalesce = coalesceKey !== undefined && lastEdit?.key === coalesceKey && now - lastEdit.at < COALESCE_MS
     set({
-      doc: next,
+      ...canonicalDesign(next),
       past: coalesce ? past : pushHistory(past, doc),
       future: [],
       selectedIds: keepExisting(next, selectedIds),
@@ -99,7 +129,7 @@ export const useEditor = create<EditorState & EditorActions>()((set, get) => ({
   preview(next) {
     const { doc, selectedIds } = get()
     if (next === doc) return
-    set({ doc: next, selectedIds: keepExisting(next, selectedIds) })
+    set({ ...canonicalDesign(next), selectedIds: keepExisting(next, selectedIds) })
   },
 
   endGesture(start) {
@@ -110,12 +140,14 @@ export const useEditor = create<EditorState & EditorActions>()((set, get) => ({
 
   undo() {
     const { doc, past, future, selectedIds } = get()
-    const previous = past[past.length - 1]
-    if (!previous) return
+    const previousSpec = past[past.length - 1]
+    if (!previousSpec) return
+    const previous = specToDocument(previousSpec)
     set({
       doc: previous,
+      spec: previousSpec,
       past: past.slice(0, -1),
-      future: [doc, ...future],
+      future: [documentToSpec(doc), ...future],
       selectedIds: keepExisting(previous, selectedIds),
       lastEdit: null,
     })
@@ -123,10 +155,11 @@ export const useEditor = create<EditorState & EditorActions>()((set, get) => ({
 
   redo() {
     const { doc, past, future, selectedIds } = get()
-    const [next, ...rest] = future
-    if (!next) return
+    const [nextSpec, ...rest] = future
+    if (!nextSpec) return
+    const next = specToDocument(nextSpec)
     set({
-      doc: next,
+      ...canonicalDesign(next),
       past: pushHistory(past, doc),
       future: rest,
       selectedIds: keepExisting(next, selectedIds),
@@ -149,6 +182,10 @@ export const useEditor = create<EditorState & EditorActions>()((set, get) => ({
   setMarquee: (marquee) => set({ marquee }),
   setClipboard: (clipboard) => set({ clipboard }),
   setHelpOpen: (helpOpen) => set({ helpOpen }),
+  setIconPickerOpen: (iconPickerOpen) => set({ iconPickerOpen }),
+  setShaderPickerOpen: (shaderPickerOpen) => set({ shaderPickerOpen }),
   startEditing: (id, start) => set({ editingId: id, editStart: start, selectedIds: [id] }),
   stopEditing: () => set({ editingId: null, editStart: null }),
+  markAgentEdit: (ids) => set({ agentEdit: { id: (get().agentEdit?.id ?? 0) + 1, ids, past: get().past } }),
+  dismissAgentEdit: () => set({ agentEdit: null }),
 }))

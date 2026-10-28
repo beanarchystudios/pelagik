@@ -4,7 +4,15 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>d3sign</title>
+    <title>pelagik</title>
+    <script>
+      // Pick the theme before first paint so the editor never flashes. A saved "light" or "dark" wins over the system setting.
+      try {
+        const saved = localStorage.getItem("pelagik:theme")
+        const dark = saved === "dark" || (saved !== "light" && matchMedia("(prefers-color-scheme: dark)").matches)
+        document.documentElement.classList.toggle("dark", dark)
+      } catch {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

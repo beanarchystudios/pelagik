@@ -1,0 +1,173 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/dm-sans";
+
+@source "../";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+    --font-heading: var(--font-sans);
+    --font-sans: 'DM Sans Variable', sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+    --color-selection: var(--selection);
+    --color-canvas: var(--canvas);
+    --color-sidebar-ring: var(--sidebar-ring);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar: var(--sidebar);
+    --color-chart-5: var(--chart-5);
+    --color-chart-4: var(--chart-4);
+    --color-chart-3: var(--chart-3);
+    --color-chart-2: var(--chart-2);
+    --color-chart-1: var(--chart-1);
+    --color-ring: var(--ring);
+    --color-input: var(--input);
+    --color-border: var(--border);
+    --color-destructive: var(--destructive);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-accent: var(--accent);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-muted: var(--muted);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-secondary: var(--secondary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-primary: var(--primary);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-popover: var(--popover);
+    --color-card-foreground: var(--card-foreground);
+    --color-card: var(--card);
+    --color-foreground: var(--foreground);
+    --color-background: var(--background);
+    --radius-sm: calc(var(--radius) * 0.6);
+    --radius-md: calc(var(--radius) * 0.8);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) * 1.4);
+    --radius-2xl: calc(var(--radius) * 1.8);
+    --radius-3xl: calc(var(--radius) * 2.2);
+    --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+:root {
+    color-scheme: light;
+    /* Near-neutral surfaces. Chroma stays low so the chrome reads as gray, and the aqua accent carries the color. */
+    --background: oklch(0.982 0.003 225);
+    --foreground: oklch(0.2 0.008 240);
+    --card: oklch(0.995 0.002 225);
+    --card-foreground: oklch(0.2 0.008 240);
+    --popover: oklch(0.995 0.002 225);
+    --popover-foreground: oklch(0.2 0.008 240);
+    --primary: oklch(0.5 0.105 195);
+    --primary-foreground: oklch(0.985 0.01 195);
+    --secondary: oklch(0.955 0.003 220);
+    --secondary-foreground: oklch(0.25 0.006 235);
+    --muted: oklch(0.95 0.003 222);
+    --muted-foreground: oklch(0.5 0.01 228);
+    --accent: color-mix(in oklab, var(--selection) 14%, var(--background));
+    --accent-foreground: oklch(0.25 0.006 235);
+    --destructive: oklch(0.577 0.245 27.325);
+    --border: oklch(0.9 0.005 222);
+    --input: oklch(0.9 0.005 222);
+    --ring: oklch(0.6 0.12 195);
+    /* Selection, hover, and agent-edit highlights. The canvas and layers panel both read this. */
+    --selection: oklch(0.6 0.13 192);
+    /* The canvas sits a step grayer than the chrome, and the dots stay quiet so artwork is the focus. */
+    --canvas: oklch(0.955 0.004 225);
+    --grid-dot: oklch(0.89 0.006 225);
+    --chart-1: oklch(0.865 0.127 207.078);
+    --chart-2: oklch(0.715 0.143 215.221);
+    --chart-3: oklch(0.609 0.126 221.723);
+    --chart-4: oklch(0.52 0.105 223.128);
+    --chart-5: oklch(0.45 0.085 224.283);
+    --radius: 0.625rem;
+    --sidebar: oklch(0.967 0.004 225);
+    --sidebar-foreground: oklch(0.2 0.008 240);
+    --sidebar-primary: oklch(0.5 0.105 195);
+    --sidebar-primary-foreground: oklch(0.985 0.01 195);
+    --sidebar-accent: color-mix(in oklab, var(--selection) 14%, var(--background));
+    --sidebar-accent-foreground: oklch(0.25 0.006 235);
+    --sidebar-border: oklch(0.9 0.005 222);
+    --sidebar-ring: oklch(0.6 0.12 195);
+    --tactile-highlight: rgba(255, 255, 255, 0.9);
+    --tactile-lip: color-mix(in oklab, var(--border) 72%, black);
+    --tactile-pressed: color-mix(in oklab, var(--foreground) 10%, transparent);
+    --tactile-inset: color-mix(in oklab, var(--foreground) 22%, transparent);
+}
+
+/* Dark tokens, used when the system is dark or the saved theme is dark. A near-neutral base with the aqua accent carries the identity. */
+.dark {
+    color-scheme: dark;
+    --background: oklch(0.16 0.01 240);
+    --foreground: oklch(0.94 0.005 200);
+    --card: oklch(0.2 0.011 238);
+    --card-foreground: oklch(0.94 0.005 200);
+    --popover: oklch(0.21 0.011 238);
+    --popover-foreground: oklch(0.94 0.005 200);
+    --primary: oklch(0.82 0.135 190);
+    --primary-foreground: oklch(0.2 0.015 230);
+    --secondary: oklch(0.26 0.01 236);
+    --secondary-foreground: oklch(0.95 0.005 200);
+    --muted: oklch(0.24 0.01 236);
+    --muted-foreground: oklch(0.7 0.012 215);
+    --accent: color-mix(in oklab, var(--selection) 18%, var(--background));
+    --accent-foreground: oklch(0.97 0.005 200);
+    --destructive: oklch(0.704 0.191 22.216);
+    --border: oklch(0.8 0.012 215 / 12%);
+    --input: oklch(0.8 0.012 215 / 16%);
+    --ring: oklch(0.82 0.135 190 / 70%);
+    --selection: oklch(0.82 0.135 190);
+    --canvas: oklch(0.14 0.009 240);
+    --grid-dot: oklch(0.2 0.008 235);
+    --chart-1: oklch(0.865 0.127 207.078);
+    --chart-2: oklch(0.715 0.143 215.221);
+    --chart-3: oklch(0.609 0.126 221.723);
+    --chart-4: oklch(0.52 0.105 223.128);
+    --chart-5: oklch(0.45 0.085 224.283);
+    --sidebar: oklch(0.19 0.011 238);
+    --sidebar-foreground: oklch(0.94 0.005 200);
+    --sidebar-primary: oklch(0.82 0.135 190);
+    --sidebar-primary-foreground: oklch(0.2 0.045 230);
+    --sidebar-accent: color-mix(in oklab, var(--selection) 18%, var(--background));
+    --sidebar-accent-foreground: oklch(0.97 0.005 200);
+    --sidebar-border: oklch(0.8 0.012 215 / 12%);
+    --sidebar-ring: oklch(0.82 0.135 190 / 70%);
+    --tactile-highlight: rgba(255, 255, 255, 0.07);
+    --tactile-lip: rgba(0, 0, 0, 0.5);
+}
+
+/* Glow fired by agent edits on the canvas and in the layers panel. The keyframes restart when the key changes. */
+@theme {
+    --animate-agent-flash: agent-flash 1.6s ease-out both;
+
+    @keyframes agent-flash {
+        0% { opacity: 0; }
+        12% { opacity: 1; }
+        100% { opacity: 0; }
+    }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+    }
+  body {
+    @apply bg-background text-foreground;
+    }
+  html {
+    @apply font-sans;
+    }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+    }
+  /* The browser's default selection blue disappears on the dark canvas, so selections use the theme accent. */
+  ::selection {
+    background-color: color-mix(in oklab, var(--selection) 40%, transparent);
+    }
+}

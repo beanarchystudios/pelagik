@@ -1,15 +1,15 @@
 import { useEffect, useRef, type CSSProperties, type MouseEvent as ReactMouseEvent, type PointerEvent as ReactPointerEvent } from "react"
-import { frameAt, hitTest, nodesInRect, selectionTarget } from "../model/hit-test"
-import { boundsOfIds, createNode, topmostIds, worldCenter } from "../model/document"
-import { addNodeAt, moveNodes, reparentForDrop, resizeNodes, rotateNodes } from "../model/operations"
-import type { Document, Handle, NodeType, Point, Rect, SceneNode, Tool, Viewport } from "../model/types"
-import { fitBounds, screenToWorld, zoomAround } from "../model/viewport"
+import { frameAt, hitTest, nodesInRect, selectionTarget } from "@pelagik/design-core/hit-test"
+import { boundsOfIds, createNode, topmostIds, worldCenter } from "@pelagik/design-core/document"
+import { addNodeAt, moveNodes, reparentForDrop, resizeNodes, rotateNodes } from "@pelagik/design-core/operations"
+import type { Document, Handle, NodeType, Point, Rect, SceneNode, Tool, Viewport } from "@pelagik/design-core/types"
+import { fitBounds, screenToWorld, zoomAround } from "@pelagik/design-core/viewport"
 import { beginTextEdit } from "../state/commands"
 import { useEditor } from "../state/store"
 import { CanvasContextMenu } from "./CanvasContextMenu"
+import { gridSpacing } from "./grid"
 import { SceneNodeView } from "./SceneNodeView"
 import { SelectionOverlay } from "./SelectionOverlay"
-import { ZoomControl } from "./ZoomControl"
 
 const SHAPE_TOOLS: Partial<Record<Tool, NodeType>> = {
   frame: "frame",
@@ -24,6 +24,7 @@ const DEFAULT_SIZE: Record<NodeType, { width: number; height: number }> = {
   rectangle: { width: 100, height: 100 },
   ellipse: { width: 100, height: 100 },
   text: { width: 200, height: 24 },
+  icon: { width: 24, height: 24 },
 }
 
 /** Screen pixels a pointer must travel before a click becomes a drag. */
@@ -82,17 +83,20 @@ export function Canvas() {
   const tool = useEditor((s) => s.tool)
   const spaceHeld = useEditor((s) => s.spaceHeld)
 
-  // Track the canvas size and fit the document once on first layout.
+  // Track the canvas size and fit the opening document once on first layout.
   useEffect(() => {
     const el = containerRef.current
     if (!el) return
     const observer = new ResizeObserver(([entry]) => {
       const { width, height } = entry.contentRect
+      if (width <= 0 || height <= 0) return
       const s = useEditor.getState()
       s.setCanvasSize({ width, height })
-      if (!fittedRef.current && s.doc.rootIds.length > 0) {
+      if (!fittedRef.current) {
         fittedRef.current = true
-        useEditor.getState().setViewport(fitToNodes(s.doc, { width, height }))
+        if (s.doc.rootIds.length > 0) {
+          useEditor.getState().setViewport(fitToNodes(s.doc, { width, height }))
+        }
       }
     })
     observer.observe(el)
@@ -109,7 +113,8 @@ export function Canvas() {
       const s = useEditor.getState()
       const point = localPoint(el, e)
       if (e.ctrlKey || e.metaKey) {
-        s.setViewport(zoomAround(s.viewport, point, s.viewport.zoom * Math.exp(-e.deltaY * 0.01)))
+        const zoomFactor = e.deltaY < 0 ? 1.1 : e.deltaY > 0 ? 0.9 : 1
+        s.setViewport(zoomAround(s.viewport, point, s.viewport.zoom * zoomFactor))
         return
       }
       const horizontal = e.shiftKey && e.deltaX === 0
@@ -353,12 +358,20 @@ export function Canvas() {
   const cursor: CSSProperties["cursor"] =
     spaceHeld || tool === "hand" ? "grab" : tool === "select" ? "default" : tool === "text" ? "text" : "crosshair"
 
+  // The dot grid is painted on the viewport and follows pan and zoom. Each tile is centered on the world origin, so dots sit on world grid points.
+  const spacing = gridSpacing(viewport.zoom)
+  const gridStyle: CSSProperties = {
+    backgroundImage: "radial-gradient(circle, var(--grid-dot) 1px, transparent 1.25px)",
+    backgroundSize: `${spacing}px ${spacing}px`,
+    backgroundPosition: `${viewport.x - spacing / 2}px ${viewport.y - spacing / 2}px`,
+  }
+
   return (
     <CanvasContextMenu>
       <div
         ref={containerRef}
-        className="relative h-full w-full touch-none overflow-hidden bg-muted select-none"
-        style={{ cursor }}
+        className="relative h-full w-full touch-none overflow-hidden bg-canvas select-none"
+        style={{ cursor, ...gridStyle }}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={finishGesture}
@@ -380,7 +393,6 @@ export function Canvas() {
           ))}
         </div>
         <SelectionOverlay />
-        <ZoomControl />
       </div>
     </CanvasContextMenu>
   )

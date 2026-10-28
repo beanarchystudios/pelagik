@@ -1,5 +1,5 @@
 {
-  "name": "d3sign",
+  "name": "pelagik",
   "private": true,
   "packageManager": "bun@1.4.4",
   "workspaces": [
@@ -8,12 +8,26 @@
   ],
   "scripts": {
     "build": "turbo run build",
-    "dev": "turbo run dev",
+    "dev": "bun run dev:web",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
-    "test": "turbo run test"
+    "test": "turbo run test",
+    "dev:web": "bun run --cwd apps/web dev",
+    "dev:desktop": "bun run --cwd apps/desktop dev",
+    "build:desktop": "turbo run build --filter=@pelagik/desktop",
+    "desktop": "bun run build:desktop && bun run --cwd apps/desktop start",
+    "pack:desktop": "bun run build:desktop && bun run --cwd apps/desktop pack",
+    "dist:desktop": "bun run build:desktop && bun run --cwd apps/desktop dist",
+    "mcp": "bun apps/mcp/src/server.ts",
+    "agent:pair": "bun apps/mcp/src/cli.ts pair",
+    "test:mcp:e2e": "bun run build:desktop && bun apps/mcp/test/editor.e2e.ts",
+    "agent": "bun apps/mcp/src/cli.ts",
+    "agent:setup": "bun apps/mcp/src/cli.ts setup"
   },
   "devDependencies": {
     "turbo": "^2.5.0"
-  }
+  },
+  "trustedDependencies": [
+    "electron"
+  ]
 }

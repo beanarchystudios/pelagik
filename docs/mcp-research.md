@@ -1,0 +1,40 @@
+# MCP protocol and TypeScript SDK research
+
+Verified on 2026-10-27 against official protocol documentation, the official SDK repository and npm registry metadata. Firecrawl was attempted as requested but returned `Insufficient credits to perform this request`; sources were retrieved directly over HTTPS instead. Saved source snapshots are in `.firecrawl/`. No application code was changed.
+
+## Verified stable versions
+
+- **Protocol: `2026-07-28`.** The official versioning page explicitly calls this the **Current** revision, meaning ready for use and still eligible for backwards-compatible changes. The `/specification/latest` URL also resolved to this revision. “Final” means an older frozen revision, not the newest stable revision. Draft revisions are explicitly not ready for consumption. [Versioning](https://modelcontextprotocol.io/docs/2026-07-28/learn/versioning), [latest specification](https://modelcontextprotocol.io/specification/latest).
+- **TypeScript SDK v2 is stable**, not prerelease. The official README identifies `main` as the stable v2 release line implementing `2026-07-28`. npm `latest` is **`2.4.0`** for both **`@modelcontextprotocol/server`** and **`@modelcontextprotocol/client`**, published 2026-10-23. GitHub also marks `v2.4.0` as a non-prerelease. [Official README](https://github.com/modelcontextprotocol/typescript-sdk#readme), [release](https://github.com/modelcontextprotocol/typescript-sdk/releases/tag/v2.4.0), [server registry](https://registry.npmjs.org/@modelcontextprotocol/server), [client registry](https://registry.npmjs.org/@modelcontextprotocol/client).
+- **Legacy package `@modelcontextprotocol/sdk`: `1.32.2`** is its npm `latest`, published 2026-10-23. This is the maintained v1 line, not the current split-package v2 SDK. The README promises v1 bug/security fixes for at least six months after the v2 release on 2026-07-27. [Registry](https://registry.npmjs.org/@modelcontextprotocol/sdk), [README](https://github.com/modelcontextprotocol/typescript-sdk#readme).
+- The split server/client registry histories include `2.0.0-alpha.*` and `2.0.0-beta.*`, through `2.0.0-beta.5`. Those are historical prereleases. At verification, neither package nor the legacy SDK had a prerelease dist-tag: each exposed only `latest`. No newer active prerelease was verified. Do not reuse older advice that “v2 is alpha.” See the registry sources above.
+
+## Transports and version compatibility
+
+**stdio** is a client-launched subprocess using newline-delimited UTF-8 JSON-RPC over stdin/stdout. stdout must contain only MCP messages; logs belong on stderr. It suits a local process managed by its client. **Streamable HTTP** runs an independent server with a single MCP POST endpoint. Each client message is a separate POST; request responses are either JSON or a request-scoped SSE stream, and clients must support both. Localhost HTTP is still HTTP, not stdio. [Transport overview](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports), [stdio](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/stdio), [Streamable HTTP](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http).
+
+The current revision removed protocol sessions and the standalone HTTP GET stream. `Mcp-Session-Id`, DELETE session termination, and `Last-Event-ID` resumption belong to older revisions. Current requests carry version/client metadata in `_meta`; HTTP mirrors specified metadata in headers. `server/discover` can discover supported versions/capabilities without the older `initialize` handshake. Supporting `2025-11-25` or earlier requires explicit compatibility behavior. [Versioning](https://modelcontextprotocol.io/docs/2026-07-28/learn/versioning), [HTTP backward compatibility](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http#backward-compatibility).
+
+## Tool results, images and resources
+
+- Tool results can contain `content` blocks for text, images, audio, resource links and embedded resources. Images use `type: "image"`, base64 `data`, and `mimeType`, such as `image/png`. A host's rendering support is a separate concern from protocol validity.
+- `structuredContent` holds any JSON value in this revision, including arrays and scalars. A tool may declare an `outputSchema`; the server MUST return conforming structured results when it does, and clients SHOULD validate them. For backwards compatibility, tools returning structured content SHOULD also include serialized JSON in a text block. This is server result data, not schema-constrained LLM generation.
+- A `resource_link` supplies a URI and metadata; it need not appear in `resources/list`. Embedded `resource` blocks contain the resource directly. Separately, `resources/list` discovers resources and `resources/read` retrieves them, using text or base64 `blob` contents. Servers using embedded resources SHOULD implement the resources capability.
+
+Sources: [Tools and result types](https://modelcontextprotocol.io/specification/2026-07-28/server/tools), [resources](https://modelcontextprotocol.io/specification/2026-07-28/server/resources).
+
+## Notifications
+
+Notifications have no JSON-RPC request ID and receive no JSON-RPC response. In the current revision, clients open `subscriptions/listen` for requested change notifications, such as `toolsListChanged`, `resourcesListChanged`, or specific `resourceSubscriptions`. The server first sends `notifications/subscriptions/acknowledged`, then only the accepted notification types. Relevant events include `notifications/tools/list_changed`, `notifications/resources/list_changed`, and `notifications/resources/updated`; clients then re-list or re-read data. This replaces the former `resources/subscribe` RPC and standalone GET stream. On stdio, subscription notifications share stdout and carry subscription correlation metadata; HTTP delivers them on the listen request's stream. Request-related progress/logging notifications also exist. [Subscriptions](https://modelcontextprotocol.io/specification/2026-07-28/basic/patterns/subscriptions), [stdio message delivery](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/stdio#receiving-messages), [tools](https://modelcontextprotocol.io/specification/2026-07-28/server/tools).
+
+Cancellation differs by transport: stdio sends `notifications/cancelled`; HTTP closes the request response stream. Do not assume cancellation is an HTTP notification. [Transport cancellation](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports#cancellation).
+
+## Authorization and localhost
+
+Authorization is **OPTIONAL** at the protocol level. HTTP implementations supporting it SHOULD follow the MCP authorization specification, which defines an OAuth-based flow for protected servers. stdio implementations SHOULD NOT use that HTTP OAuth flow and should retrieve credentials from the environment. [Authorization requirements](https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization#protocol-requirements).
+
+For Streamable HTTP, including localhost, servers **MUST validate Origin**; a present invalid Origin requires HTTP 403. Local servers **SHOULD bind to `127.0.0.1`** rather than `0.0.0.0`, and servers **SHOULD implement proper authentication for all connections**. Localhost does not waive those recommendations or the Origin requirement. A blanket statement that OAuth is mandatory for every local MCP server would overstate the specification. [HTTP security requirements](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http#security-warning).
+
+## Verification limits
+
+The version claims above were verified live, not inferred from model knowledge or a draft branch. Future revisions, untagged development commits, and a newer prerelease not exposed by the inspected registries/releases were not verified. No SDK installation, client interoperability test, or host image-rendering test was performed.
